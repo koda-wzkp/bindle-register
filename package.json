@@ -1,0 +1,45 @@
+{
+  "name": "bindle-register",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "description": "Production registration + split-signing application. Bindle reference implementation at n=1.",
+  "workspaces": [
+    "packages/core"
+  ],
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run build --workspace @bindle/core && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:core && npm run test:routes",
+    "test:core": "npm run test --workspace @bindle/core",
+    "test:routes": "vitest run"
+  },
+  "dependencies": {
+    "@bindle/core": "*",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@fontsource/ibm-plex-serif": "^5.2.7",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.47.10",
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^4.0.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "pg": "^8.22.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
+  }
+}

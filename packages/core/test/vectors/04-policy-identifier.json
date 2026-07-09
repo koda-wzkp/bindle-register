@@ -1,0 +1,72 @@
+{
+  "description": "Same terms as vector 01 under a different split-shape policy id — the policy is part of the hashed record",
+  "payload": {
+    "protocol": "BNDL",
+    "medium": "PROD",
+    "namespace": "TBD",
+    "org": "Puddletown Theatre Collective",
+    "title": "Floyd Collins",
+    "parent_buid": null,
+    "revision": 0,
+    "policy": "example-alt-policy-v1",
+    "pool_definition": "Earned-revenue surplus from the Floyd Collins run: box office and program-ad receipts, less licensed royalties, venue rental, and the capped production expense list agreed by the company (materials, costume, print).",
+    "commons": {
+      "recipient": "Puddletown Commons Fund",
+      "bps": 500
+    },
+    "contributors": [
+      {
+        "name": "Alice Norton",
+        "role": "Cast",
+        "bps": 1200,
+        "principal": false
+      },
+      {
+        "name": "Ben Okafor",
+        "role": "Cast",
+        "bps": 1200,
+        "principal": false
+      },
+      {
+        "name": "Carmen Silva",
+        "role": "Cast",
+        "bps": 1200,
+        "principal": false
+      },
+      {
+        "name": "Chase Whitfield",
+        "role": "Music Director",
+        "bps": 1200,
+        "principal": true
+      },
+      {
+        "name": "Dana Ruiz",
+        "role": "Stage Manager",
+        "bps": 800,
+        "principal": false
+      },
+      {
+        "name": "Evan Park",
+        "role": "Cast",
+        "bps": 1200,
+        "principal": false
+      },
+      {
+        "name": "Frank Delano",
+        "role": "Cast",
+        "bps": 1200,
+        "principal": false
+      },
+      {
+        "name": "Morgan Ellery",
+        "role": "Director",
+        "bps": 1500,
+        "principal": true
+      }
+    ]
+  },
+  "expected": {
+    "content_hash": "8314b8036d12fdad22b7ce73ff240c890372895f22dc67c578af2305395abcb3",
+    "buid": "BNDL::PROD::TBD::ROOT::R0::8314b803"
+  }
+}

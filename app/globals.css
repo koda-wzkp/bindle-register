@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Ink on paper. The registered record is designed to be reproduced in a
+ * printed theatre program, so the screen design starts from print: paper
+ * ground, ink text, hairline rules, and a single prompt-book blue used only
+ * for actions and live annotations — never for the record itself.
+ */
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-body antialiased;
+  }
+  ::selection {
+    @apply bg-prompt text-paper;
+  }
+}
+
+@layer components {
+  .rule {
+    @apply border-t border-rule;
+  }
+  .eyebrow {
+    @apply font-mono text-[11px] uppercase tracking-[0.18em] text-ink-soft;
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 border border-ink bg-ink px-4 py-2 font-body text-sm text-paper transition-colors hover:bg-prompt hover:border-prompt focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-prompt disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-quiet {
+    @apply inline-flex items-center gap-2 border border-rule bg-transparent px-4 py-2 font-body text-sm text-ink transition-colors hover:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-prompt disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 border border-caution bg-transparent px-4 py-2 font-body text-sm text-caution transition-colors hover:bg-caution hover:text-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-caution disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .field {
+    @apply w-full border border-rule bg-white px-3 py-2 font-body text-sm text-ink placeholder:text-ink-soft/60 focus:border-prompt focus:outline-none focus:ring-1 focus:ring-prompt;
+  }
+  .field-label {
+    @apply mb-1 block font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+  }
+}

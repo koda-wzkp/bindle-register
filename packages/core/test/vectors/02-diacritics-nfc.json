@@ -1,0 +1,42 @@
+{
+  "description": "Non-ASCII names lock NFC behavior: identical hashes across machines regardless of input composition form",
+  "payload": {
+    "protocol": "BNDL",
+    "medium": "PROD",
+    "namespace": "TBD",
+    "org": "Puddletown Theatre Collective",
+    "title": "Cyrano de Bergerac",
+    "parent_buid": null,
+    "revision": 0,
+    "policy": "bindle-commons-v1",
+    "pool_definition": "Earned-revenue surplus from the staged reading series, less venue rental and the capped expense list approved by the members at the spring meeting.",
+    "commons": {
+      "recipient": "Puddletown Commons Fund",
+      "bps": 1000
+    },
+    "contributors": [
+      {
+        "name": "Björk Guðmundsdóttir",
+        "role": "Sound Designer",
+        "bps": 3000,
+        "principal": false
+      },
+      {
+        "name": "René Dubois",
+        "role": "Director",
+        "bps": 3000,
+        "principal": true
+      },
+      {
+        "name": "Zoë Åkesson",
+        "role": "Cast",
+        "bps": 3000,
+        "principal": false
+      }
+    ]
+  },
+  "expected": {
+    "content_hash": "cd3257216c40c52138d776d8c520be7bf0b76256ac04e15f92f1582df9a56fef",
+    "buid": "BNDL::PROD::TBD::ROOT::R0::cd325721"
+  }
+}

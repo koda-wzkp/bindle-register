@@ -1,0 +1,9 @@
+{
+  "description": "Frozen literal contents of the bindle-commons-v1 preset. Registrations hash-cover this id, so these values are immutable: any edit must fail CI and be expressed as a new policy id instead.",
+  "policy": {
+    "id": "bindle-commons-v1",
+    "commonsFloorBps": 500,
+    "principalCapBps": 4900,
+    "soloMaxBps": 8500
+  }
+}
