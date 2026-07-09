@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bindle_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: bindle_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Protocol lock: test vectors failing means existing registrations
+      # in the wild would stop verifying.
+      - name: Build @bindle/core
+        run: npm run build --workspace @bindle/core
+      - name: Core tests (vectors, validation, glyph purity, verify)
+        run: npm run test --workspace @bindle/core
+
+      - name: Apply migration + immutability tests (acceptance 3–5)
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/00-supabase-shim.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/01-immutability.sql
+
+      - name: Typecheck app
+        run: npx tsc --noEmit
+      - name: Build app
+        run: npx next build
