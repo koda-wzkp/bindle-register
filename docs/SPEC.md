@@ -85,7 +85,12 @@ Puddletown registers under `BINDLE_COMMONS_POLICY` (the app pins it as
 `lib/policy.ts → INSTANCE_POLICY`). The policy **id** is included in the
 canonical payload (hash-covered) and stored on the registration row, so every
 record is verifiable against the rules it was actually registered under.
-A policy id must never be reused with different values — new values, new id.
+
+**Presets are append-only.** Hash-covering the id only works if the
+id → values mapping is immutable, so a policy id must never be reused with
+different values — new values, new id. This is enforced, not advisory: the
+preset object is frozen at runtime, and a committed fixture pins its exact
+literal values so any edit fails CI (see §6.5).
 
 v1 ships exactly one preset. No venue preset until a venue deployment exists.
 
@@ -166,6 +171,22 @@ pipeline: a root collaborative work, a non-ASCII (diacritics) payload pinning
 NFC behavior, an amendment whose lineage segment is the parent's short hash,
 and a policy-identifier vector (same terms under a different policy id →
 different hash). CI fails if vectors drift.
+
+### 6.5 Freeze rule (invariant)
+
+> Test vectors and the canonicalization algorithm are frozen at first
+> external registration — defined as the moment any BUID or canonical JSON
+> leaves the system (first emailed registration, first record shared outside
+> admin). After that point, changes to canonicalization, the BUID grammar,
+> or a policy preset's values are protocol breaks and MUST be expressed as a
+> new medium segment or a new policy id. Never a re-bake. Historical records
+> must verify forever under the rules they were registered with.
+
+**Status: the freeze has not yet occurred.** No BUID or canonical JSON has
+left the system; it occurs at Floyd Collins registration (2026-09-28 target).
+Vectors were re-baked during pre-release review (BUID rename, policy field) —
+that was legal exactly because of this status, and stops being legal the
+moment the first registration email sends.
 
 ---
 

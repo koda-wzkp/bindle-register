@@ -4,9 +4,17 @@
  * Route handlers exercise exactly the query-builder surface implemented
  * here (select/insert/update/delete + eq/in/order + single/maybeSingle, and
  * rpc). Queries run as the connection's superuser — the same trust level as
- * the production service role: RLS is bypassed, but the migration's guard
- * triggers and SQL functions apply in full, which is precisely what these
- * tests are about.
+ * the production service role.
+ *
+ * RLS IS BYPASSED HERE, BY DESIGN. The handlers' production connection is
+ * the service role, which also bypasses RLS; what these tests prove is the
+ * app-layer fence (session checks, admin allowlist, recomputed hashes) plus
+ * the migration's guard triggers and SQL functions, which apply to every
+ * role. The DB-layer fence for end-user connections — RLS scoping and the
+ * INSERT-only signature policy — has its own suite that runs as the
+ * `authenticated` role with request.jwt.claims set:
+ * supabase/tests/02-rls.sql. Neither layer's tests can pass on the other
+ * layer's enforcement.
  */
 import { Pool } from 'pg';
 

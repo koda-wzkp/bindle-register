@@ -41,11 +41,12 @@ jobs:
       - name: Core tests (vectors, validation, glyph purity, verify)
         run: npm run test --workspace @bindle/core
 
-      - name: Apply migration + immutability tests (acceptance 3–5)
+      - name: Apply migration + immutability + RLS tests (acceptance 3–5)
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/00-supabase-shim.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/01-immutability.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/02-rls.sql
 
       - name: Route-handler integration tests (authorization matrix, collision retry, guards)
         run: npm run test:routes

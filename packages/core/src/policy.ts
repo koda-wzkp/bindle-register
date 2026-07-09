@@ -26,10 +26,18 @@ export interface BindlePolicy {
 /**
  * Bindle's music-commons commitments: ≥5% commons, ≤49% per principal on
  * collaborative works, ≤85% solo. Puddletown registers under this preset.
+ *
+ * POLICY PRESETS ARE APPEND-ONLY. A registration's hash covers the policy
+ * *id*; that guarantee only holds if an id's values never change. Editing
+ * this preset would silently re-rule every historical record while its hash
+ * still validates — the exact failure the policy split exists to prevent.
+ * To change values, mint a NEW id (e.g. bindle-commons-v2) and leave this
+ * one untouched forever. The object is frozen and its exact literal values
+ * are locked by test/vectors (CI fails on any edit).
  */
-export const BINDLE_COMMONS_POLICY: BindlePolicy = {
+export const BINDLE_COMMONS_POLICY: BindlePolicy = Object.freeze({
   id: 'bindle-commons-v1',
   commonsFloorBps: 500,
   principalCapBps: 4_900,
   soloMaxBps: 8_500,
-};
+});
