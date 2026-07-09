@@ -1,9 +1,17 @@
 import { BindleConfig } from '@bindle/core';
 
 /**
- * E-sign consent copy, versioned via BindleConfig.CONSENT_TEXT_VERSION.
- * DECIDE-04: this text goes to legal review before UAT; bump the version in
- * @bindle/core config whenever a word of it changes.
+ * ═══════════════════════════════════════════════════════════════════════
+ *  DECIDE-04 — THIS CONSENT TEXT HAS **NOT** HAD LEGAL REVIEW.
+ *
+ *  Until counsel signs off and CONSENT_TEXT_REVIEWED=true is set in the
+ *  environment, production deployments refuse to record signatures
+ *  (enforced in lib/guards.ts → signatureCollectionBlocked, checked by the
+ *  signing route). Sandbox/UAT signing with dummy data is allowed.
+ *
+ *  When a single word of this text changes, bump CONSENT_TEXT_VERSION in
+ *  @bindle/core config — signatures record the version they consented to.
+ * ═══════════════════════════════════════════════════════════════════════
  */
 export const CONSENT_TEXT_VERSION = BindleConfig.CONSENT_TEXT_VERSION;
 

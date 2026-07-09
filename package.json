@@ -13,7 +13,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "npm run test --workspace @bindle/core"
+    "test": "npm run test:core && npm run test:routes",
+    "test:core": "npm run test --workspace @bindle/core",
+    "test:routes": "vitest run"
   },
   "dependencies": {
     "@bindle/core": "*",
@@ -30,11 +32,14 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/pg": "^8.20.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
+    "pg": "^8.22.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
   }
 }

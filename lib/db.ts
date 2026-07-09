@@ -44,22 +44,27 @@ export async function getProductionDetail(
   const production = await getProduction(id, db);
   if (!production) return null;
 
-  const [orgRes, contributionsRes, peopleRes, signaturesRes, registration] = await Promise.all([
+  const [orgRes, contributionsRes, peopleRes, registration] = await Promise.all([
     db.from('organizations').select('*').eq('id', production.org_id).single(),
     db.from('contributions').select('*').eq('production_id', id),
     db.from('people').select('*').eq('org_id', production.org_id),
-    db
-      .from('signatures')
-      .select('*, contributions!inner(production_id)')
-      .eq('contributions.production_id', id),
     db.from('registrations').select('*').eq('production_id', id).maybeSingle(),
   ]);
 
   const org = unwrap(orgRes) as OrganizationRow;
   const contributions = unwrap(contributionsRes) as ContributionRow[];
   const people = unwrap(peopleRes) as PersonRow[];
-  const signatures = unwrap(signaturesRes) as Array<SignatureRow & { contributions: unknown }>;
   if (registration.error) throw new Error(registration.error.message);
+
+  const signatures =
+    contributions.length === 0
+      ? []
+      : (unwrap(
+          await db
+            .from('signatures')
+            .select('*')
+            .in('contribution_id', contributions.map((c) => c.id)),
+        ) as SignatureRow[]);
 
   let parentRegistration: RegistrationRow | null = null;
   if (production.parent_production_id) {

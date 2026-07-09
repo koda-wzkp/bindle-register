@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { BindleConfig, validateProduction, validateRegistrationReadiness } from '../src/index.js';
+import {
+  BINDLE_COMMONS_POLICY,
+  BindleConfig,
+  validateProduction,
+  validateRegistrationReadiness,
+} from '../src/index.js';
 import type { ProductionForValidation } from '../src/index.js';
 
 const POOL =
@@ -19,11 +24,12 @@ function collaborative(overrides: Partial<ProductionForValidation> = {}): Produc
   };
 }
 
-const codes = (p: ProductionForValidation) => validateProduction(p).map((e) => e.code);
+const POLICY = BINDLE_COMMONS_POLICY;
+const codes = (p: ProductionForValidation) => validateProduction(p, POLICY).map((e) => e.code);
 
 describe('validateProduction', () => {
   it('passes a well-formed collaborative production', () => {
-    expect(validateProduction(collaborative())).toEqual([]);
+    expect(validateProduction(collaborative(), POLICY)).toEqual([]);
   });
 
   it('rule 1: rejects zero, negative, and fractional bps', () => {
@@ -41,7 +47,7 @@ describe('validateProduction', () => {
   });
 
   it('rule 3: enforces the commons floor and named recipient', () => {
-    const low = collaborative({ commons_bps: BindleConfig.COMMONS_FLOOR_BPS - 1 });
+    const low = collaborative({ commons_bps: POLICY.commonsFloorBps - 1 });
     expect(codes(low)).toContain('commons_below_floor');
     const unnamed = collaborative({ commons_recipient: '  ' });
     expect(codes(unnamed)).toContain('commons_recipient_required');
@@ -49,7 +55,7 @@ describe('validateProduction', () => {
 
   it('rule 4: caps principals on collaborative works', () => {
     const p = collaborative();
-    p.contributors[0].bps = BindleConfig.PRINCIPAL_CAP_BPS + 100;
+    p.contributors[0].bps = POLICY.principalCapBps + 100;
     p.contributors[1].bps =
       BindleConfig.TOTAL_BPS - 500 - p.contributors[0].bps;
     expect(codes(p)).toContain('principal_over_cap');
@@ -60,7 +66,7 @@ describe('validateProduction', () => {
     p.contributors[0].principal = false;
     p.contributors[0].bps = 5000;
     p.contributors[1].bps = 4500;
-    expect(validateProduction(p)).toEqual([]);
+    expect(validateProduction(p, POLICY)).toEqual([]);
   });
 
   it('rule 5: caps solo works at SOLO_MAX_BPS', () => {
@@ -77,7 +83,7 @@ describe('validateProduction', () => {
         { name: 'Morgan Ellery', email: 'morgan@example.org', role: 'Author', bps: 8500, principal: true },
       ],
     });
-    expect(validateProduction(ok)).toEqual([]);
+    expect(validateProduction(ok, POLICY)).toEqual([]);
   });
 
   it('rule 6: requires name, valid email, and role', () => {

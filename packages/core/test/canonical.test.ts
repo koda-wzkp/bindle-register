@@ -12,6 +12,7 @@ const base: CanonicalInput = {
   title: 'Floyd Collins',
   parentBuid: null,
   revision: 0,
+  policyId: 'bindle-commons-v1',
   poolDefinition: 'Earned-revenue surplus less royalties, venue, and the capped expense list.',
   commons: { recipient: 'Puddletown Commons Fund', bps: 500 },
   contributors: [

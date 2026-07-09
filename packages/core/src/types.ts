@@ -14,6 +14,12 @@ export interface CanonicalProduction {
   title: string; // NFC-normalized
   parent_buid: string | null; // null for ROOT
   revision: number;
+  /**
+   * Identifier of the split-shape policy the record was validated under
+   * (e.g. 'bindle-commons-v1'). Hashed with the terms so a record is
+   * verifiable against the rules it was actually registered under.
+   */
+  policy: string;
   pool_definition: string;
   commons: { recipient: string; bps: number };
   contributors: CanonicalContributor[]; // sorted by (name, role) ascending, code point order

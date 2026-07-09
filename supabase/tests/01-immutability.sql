@@ -51,8 +51,8 @@ select expect_error(
   'jumping to registered without register_production()');
 
 -- One signature lands
-insert into signatures (contribution_id, content_hash, consent_text_version, typed_name)
-values ('00000000-0000-0000-0000-0000000000c1', repeat('ab', 32), 'v1.0', 'Morgan Ellery');
+insert into signatures (contribution_id, content_hash, consent_text_version, typed_name, signer_email)
+values ('00000000-0000-0000-0000-0000000000c1', repeat('ab', 32), 'v1.0', 'Morgan Ellery', 'morgan@example.org');
 
 select expect_error(
   $q$update signatures set typed_name = 'Someone Else'$q$,
@@ -63,7 +63,7 @@ select expect_error(
 
 -- Registration blocked while signatures incomplete
 select expect_error(
-  $q$select register_production('00000000-0000-0000-0000-0000000000b0', '{}'::jsonb, repeat('ab', 32), 'BNDL::PROD::TBD::ROOT::R0::abababab', '<svg/>', 'test')$q$,
+  $q$select register_production('00000000-0000-0000-0000-0000000000b0', '{"policy": "bindle-commons-v1"}'::jsonb, repeat('ab', 32), 'BNDL::PROD::TBD::ROOT::R0::abababab', 'bindle-commons-v1', '<svg/>', 'test')$q$,
   'registering with incomplete signatures');
 
 -- Void: the only sanctioned discard path — must succeed and audit
@@ -78,17 +78,22 @@ end $$;
 
 -- Round 2: open, everyone signs, register
 update productions set status = 'open_for_signing' where id = '00000000-0000-0000-0000-0000000000b0';
-insert into signatures (contribution_id, content_hash, consent_text_version, typed_name) values
-  ('00000000-0000-0000-0000-0000000000c1', repeat('ab', 32), 'v1.0', 'Morgan Ellery'),
-  ('00000000-0000-0000-0000-0000000000c2', repeat('ab', 32), 'v1.0', 'Chase Whitfield');
+insert into signatures (contribution_id, content_hash, consent_text_version, typed_name, signer_email) values
+  ('00000000-0000-0000-0000-0000000000c1', repeat('ab', 32), 'v1.0', 'Morgan Ellery', 'morgan@example.org'),
+  ('00000000-0000-0000-0000-0000000000c2', repeat('ab', 32), 'v1.0', 'Chase Whitfield', 'chase@example.org');
 
 -- Tamper guard: registration with a hash the signatures did not attest to
 select expect_error(
-  $q$select register_production('00000000-0000-0000-0000-0000000000b0', '{}'::jsonb, repeat('cd', 32), 'BNDL::PROD::TBD::ROOT::R0::cdcdcdcd', '<svg/>', 'test')$q$,
+  $q$select register_production('00000000-0000-0000-0000-0000000000b0', '{"policy": "bindle-commons-v1"}'::jsonb, repeat('cd', 32), 'BNDL::PROD::TBD::ROOT::R0::cdcdcdcd', 'bindle-commons-v1', '<svg/>', 'test')$q$,
   'registering with mismatched content hash');
 
-select register_production('00000000-0000-0000-0000-0000000000b0', '{"canonical": true}'::jsonb,
-  repeat('ab', 32), 'BNDL::PROD::TBD::ROOT::R0::abababab', '<svg/>', 'system');
+-- Policy consistency: the row-level policy must match the hashed payload
+select expect_error(
+  $q$select register_production('00000000-0000-0000-0000-0000000000b0', '{"policy": "bindle-commons-v1"}'::jsonb, repeat('ab', 32), 'BNDL::PROD::TBD::ROOT::R0::abababab', 'some-other-policy', '<svg/>', 'test')$q$,
+  'registering with a policy that contradicts the canonical payload');
+
+select register_production('00000000-0000-0000-0000-0000000000b0', '{"canonical": true, "policy": "bindle-commons-v1"}'::jsonb,
+  repeat('ab', 32), 'BNDL::PROD::TBD::ROOT::R0::abababab', 'bindle-commons-v1', '<svg/>', 'system');
 
 do $$ begin
   if (select status from productions where id = '00000000-0000-0000-0000-0000000000b0') <> 'registered' then
@@ -134,11 +139,11 @@ do $$ begin
     raise exception 'FAIL: parent superseded before the child registered'; end if;
 end $$;
 
-insert into signatures (contribution_id, content_hash, consent_text_version, typed_name) values
-  ('00000000-0000-0000-0000-0000000000c3', repeat('ef', 32), 'v1.0', 'Morgan Ellery'),
-  ('00000000-0000-0000-0000-0000000000c4', repeat('ef', 32), 'v1.0', 'Chase Whitfield');
-select register_production('00000000-0000-0000-0000-0000000000b1', '{"canonical": true, "revision": 1}'::jsonb,
-  repeat('ef', 32), 'BNDL::PROD::TBD::abababab::R1::efefefef', '<svg/>', 'system');
+insert into signatures (contribution_id, content_hash, consent_text_version, typed_name, signer_email) values
+  ('00000000-0000-0000-0000-0000000000c3', repeat('ef', 32), 'v1.0', 'Morgan Ellery', 'morgan@example.org'),
+  ('00000000-0000-0000-0000-0000000000c4', repeat('ef', 32), 'v1.0', 'Chase Whitfield', 'chase@example.org');
+select register_production('00000000-0000-0000-0000-0000000000b1', '{"canonical": true, "revision": 1, "policy": "bindle-commons-v1"}'::jsonb,
+  repeat('ef', 32), 'BNDL::PROD::TBD::abababab::R1::efefefef', 'bindle-commons-v1', '<svg/>', 'system');
 
 do $$ begin
   if (select status from productions where id = '00000000-0000-0000-0000-0000000000b0') <> 'superseded' then
@@ -149,8 +154,8 @@ end $$;
 
 -- BUID uniqueness: a duplicate insert must trip the constraint (collision retry path)
 select expect_error(
-  $q$insert into registrations (production_id, canonical_json, content_hash, buid, glyph_svg)
-     values ('00000000-0000-0000-0000-0000000000b0', '{}'::jsonb, repeat('ab', 32), 'BNDL::PROD::TBD::ROOT::R0::abababab', '<svg/>')$q$,
+  $q$insert into registrations (production_id, canonical_json, content_hash, buid, policy, glyph_svg)
+     values ('00000000-0000-0000-0000-0000000000b0', '{}'::jsonb, repeat('ab', 32), 'BNDL::PROD::TBD::ROOT::R0::abababab', 'bindle-commons-v1', '<svg/>')$q$,
   'duplicate BUID');
 
 select 'ALL IMMUTABILITY CHECKS PASSED' as result;

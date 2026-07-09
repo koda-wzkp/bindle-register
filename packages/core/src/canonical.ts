@@ -14,6 +14,8 @@ export interface CanonicalInput {
   title: string;
   parentBuid: string | null;
   revision: number;
+  /** Split-shape policy id the terms were validated under (see policy.ts). */
+  policyId: string;
   poolDefinition: string;
   commons: { recipient: string; bps: number };
   contributors: Array<{ name: string; role: string; bps: number; principal: boolean }>;
@@ -68,6 +70,7 @@ export function buildCanonicalProduction(input: CanonicalInput): CanonicalProduc
     title: nfc(input.title),
     parent_buid: input.parentBuid,
     revision: input.revision,
+    policy: nfc(input.policyId),
     pool_definition: nfc(input.poolDefinition),
     commons: { recipient: nfc(input.commons.recipient), bps: input.commons.bps },
     contributors,

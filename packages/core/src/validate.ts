@@ -1,9 +1,15 @@
 import { BindleConfig } from './config.js';
+import type { BindlePolicy } from './policy.js';
 import type { ValidationError } from './types.js';
 
 /**
  * No node imports in this module: the client mirrors it for live UX in the
  * admin builder. Server-side enforcement is the real gate.
+ *
+ * Protocol invariants (integer bps, exact TOTAL_BPS, named commons
+ * recipient, well-formed contributors, real pool definition) always apply.
+ * Split-shape rules (commons floor, principal/solo caps) come from the
+ * explicit policy argument — see policy.ts for why.
  */
 
 export interface ContributorForValidation {
@@ -25,7 +31,10 @@ export interface ProductionForValidation {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_POOL_DEFINITION_CHARS = 40;
 
-export function validateProduction(p: ProductionForValidation): ValidationError[] {
+export function validateProduction(
+  p: ProductionForValidation,
+  policy: BindlePolicy,
+): ValidationError[] {
   const errors: ValidationError[] = [];
   const err = (code: string, message: string, field?: string) =>
     errors.push({ code, message, field });
@@ -43,16 +52,16 @@ export function validateProduction(p: ProductionForValidation): ValidationError[
     );
   }
 
-  // Rule 3 — commons floor and named recipient
+  // Rule 3 — commons floor (policy) and named recipient (protocol)
   if (!p.commons_recipient || p.commons_recipient.trim() === '') {
     err('commons_recipient_required', 'Commons recipient must be named.', 'commons_recipient');
   }
   if (!Number.isInteger(p.commons_bps)) {
     err('commons_bps_not_integer', 'Commons share must be an integer number of basis points.', 'commons_bps');
-  } else if (p.commons_bps < BindleConfig.COMMONS_FLOOR_BPS) {
+  } else if (p.commons_bps < policy.commonsFloorBps) {
     err(
       'commons_below_floor',
-      `Commons share must be at least ${BindleConfig.COMMONS_FLOOR_BPS} bps (${BindleConfig.COMMONS_FLOOR_BPS / 100}%).`,
+      `Commons share must be at least ${policy.commonsFloorBps} bps (${policy.commonsFloorBps / 100}%) under the ${policy.id} policy.`,
       'commons_bps',
     );
   }
@@ -98,23 +107,23 @@ export function validateProduction(p: ProductionForValidation): ValidationError[
     }
   }
 
-  // Rules 4 and 5 — caps
+  // Rules 4 and 5 — policy caps
   if (p.contributors.length > 1) {
     p.contributors.forEach((c, i) => {
-      if (c.principal && Number.isInteger(c.bps) && c.bps > BindleConfig.PRINCIPAL_CAP_BPS) {
+      if (c.principal && Number.isInteger(c.bps) && c.bps > policy.principalCapBps) {
         err(
           'principal_over_cap',
-          `Contributor ${i + 1}: principal contributors are capped at ${BindleConfig.PRINCIPAL_CAP_BPS} bps on collaborative works.`,
+          `Contributor ${i + 1}: principal contributors are capped at ${policy.principalCapBps} bps on collaborative works under the ${policy.id} policy.`,
           `contributors.${i}.bps`,
         );
       }
     });
   } else if (p.contributors.length === 1) {
     const c = p.contributors[0];
-    if (Number.isInteger(c.bps) && c.bps > BindleConfig.SOLO_MAX_BPS) {
+    if (Number.isInteger(c.bps) && c.bps > policy.soloMaxBps) {
       err(
         'solo_over_max',
-        `Solo works are capped at ${BindleConfig.SOLO_MAX_BPS} bps.`,
+        `Solo works are capped at ${policy.soloMaxBps} bps under the ${policy.id} policy.`,
         'contributors.0.bps',
       );
     }
@@ -137,6 +146,7 @@ export interface RegistrationReadiness {
  * a signature per contribution, and every signature's content_hash matching
  * the current canonical hash. If terms somehow mutated after someone signed,
  * their signature no longer matches and registration is blocked.
+ * Protocol invariant — not policy.
  */
 export function validateRegistrationReadiness(r: RegistrationReadiness): ValidationError[] {
   const errors: ValidationError[] = [];

@@ -8,6 +8,7 @@
     "title": "Cyrano de Bergerac",
     "parent_buid": null,
     "revision": 0,
+    "policy": "bindle-commons-v1",
     "pool_definition": "Earned-revenue surplus from the staged reading series, less venue rental and the capped expense list approved by the members at the spring meeting.",
     "commons": {
       "recipient": "Puddletown Commons Fund",
@@ -35,7 +36,7 @@
     ]
   },
   "expected": {
-    "content_hash": "3006490dc8bc78fba88ace7ca8072f05d13baa7ba9bc93131fdf431470fd8bd9",
-    "buid": "BNDL::PROD::TBD::ROOT::R0::3006490d"
+    "content_hash": "cd3257216c40c52138d776d8c520be7bf0b76256ac04e15f92f1582df9a56fef",
+    "buid": "BNDL::PROD::TBD::ROOT::R0::cd325721"
   }
 }

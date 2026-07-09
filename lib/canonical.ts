@@ -5,6 +5,7 @@ import {
   sha256Hex,
   type CanonicalProduction,
 } from '@bindle/core';
+import { INSTANCE_POLICY } from '@/lib/policy';
 import type { ProductionDetail } from '@/lib/types';
 
 export interface CanonicalTerms {
@@ -28,6 +29,7 @@ export function canonicalTerms(detail: ProductionDetail): CanonicalTerms {
     title: production.title,
     parentBuid: parentRegistration?.buid ?? null,
     revision: production.revision,
+    policyId: INSTANCE_POLICY.id,
     poolDefinition: production.pool_definition,
     commons: { recipient: production.commons_recipient, bps: production.commons_bps },
     contributors: contributions.map((c) => ({

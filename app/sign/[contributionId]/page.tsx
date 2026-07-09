@@ -6,6 +6,7 @@ import { getSessionUser } from '@/lib/auth';
 import { canonicalTerms } from '@/lib/canonical';
 import { CONSENT_TEXT, CONSENT_TEXT_VERSION } from '@/lib/consent';
 import { getProductionDetail } from '@/lib/db';
+import { buidShareable } from '@/lib/guards';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -99,14 +100,20 @@ export default async function SignPage({ params }: { params: { contributionId: s
             <em>{contribution.signature.typed_name}</em>. Signatures can&rsquo;t be edited; to
             withdraw before registration, ask the admin to void the round.
           </p>
-          {registration && (
-            <p className="text-sm">
-              This production is registered:{' '}
-              <Link href={`/p/${encodeURIComponent(registration.buid)}`} className="font-mono text-prompt underline">
-                {registration.buid}
-              </Link>
-            </p>
-          )}
+          {registration &&
+            (buidShareable() || user.isAdmin ? (
+              <p className="text-sm">
+                This production is registered:{' '}
+                <Link href={`/p/${encodeURIComponent(registration.buid)}`} className="font-mono text-prompt underline">
+                  {registration.buid}
+                </Link>
+              </p>
+            ) : (
+              <p className="text-sm text-ink-soft">
+                This production is registered and frozen. Its permanent identifier will be shared
+                once the registry namespace is finalized.
+              </p>
+            ))}
         </section>
       )}
 

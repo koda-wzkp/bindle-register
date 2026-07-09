@@ -1,6 +1,7 @@
 import 'server-only';
 import { Resend } from 'resend';
 import { requiredEnv } from '@/lib/env';
+import { buidShareable } from '@/lib/guards';
 
 function resend(): Resend {
   return new Resend(requiredEnv('RESEND_API_KEY'));
@@ -76,6 +77,12 @@ export async function sendRegistrationEmail(opts: {
   canonicalJson: string;
   glyphSvg: string;
 }): Promise<void> {
+  if (!buidShareable()) {
+    // DECIDE-01 runtime guard: no email may carry a BUID while the namespace
+    // segment is the 'TBD' placeholder. Callers must use
+    // sendRegistrationEmailNamespacePending instead.
+    throw new Error('BUID is not shareable while NAMESPACE_SEGMENT is TBD (DECIDE-01)');
+  }
   const { error } = await resend().emails.send({
     from: from(),
     to: opts.to,
@@ -94,6 +101,44 @@ export async function sendRegistrationEmail(opts: {
       <p style="font-family: monospace; font-size: 12px;">npx bindle-verify canonical.json '${opts.buid}'</p>
     `),
     text: `Hello ${opts.name},\n\n${opts.title} is registered and the record is frozen.\n\nBUID: ${opts.buid}\nRecord: ${opts.recordUrl}\n\nThe attached canonical.json is your offline verification copy. Verify any time with:\n\n  npx bindle-verify canonical.json '${opts.buid}'`,
+    attachments: [
+      {
+        filename: 'canonical.json',
+        content: Buffer.from(opts.canonicalJson, 'utf8').toString('base64'),
+      },
+    ],
+  });
+  if (error) throw new Error(`registration email to ${opts.to} failed: ${error.message}`);
+}
+
+/**
+ * Registration notice used while DECIDE-01 is unresolved: carries the
+ * canonical JSON and content hash (namespace-independent facts about what
+ * was signed) but deliberately no BUID and no record link.
+ */
+export async function sendRegistrationEmailNamespacePending(opts: {
+  to: string;
+  name: string;
+  title: string;
+  contentHash: string;
+  canonicalJson: string;
+}): Promise<void> {
+  const { error } = await resend().emails.send({
+    from: from(),
+    to: opts.to,
+    subject: `Registered: ${opts.title}`,
+    html: wrap(`
+      <p>Hello ${opts.name},</p>
+      <p><em>${opts.title}</em> is registered. Every named contributor signed the same
+      terms, and the record is now frozen, append-only.</p>
+      <p>The exact terms are identified by this content hash:</p>
+      <p style="font-family: monospace; font-size: 12px; word-break: break-all;">${opts.contentHash}</p>
+      <p>The attached <code>canonical.json</code> is your verification copy — the exact
+      bytes the hash is derived from. The record&rsquo;s permanent public identifier will
+      be shared once the registry namespace is finalized; nothing about your signed
+      terms can change in the meantime.</p>
+    `),
+    text: `Hello ${opts.name},\n\n${opts.title} is registered and the record is frozen.\n\nContent hash of the signed terms: ${opts.contentHash}\n\nThe attached canonical.json is your verification copy. The record's permanent public identifier will be shared once the registry namespace is finalized; nothing about your signed terms can change in the meantime.`,
     attachments: [
       {
         filename: 'canonical.json',

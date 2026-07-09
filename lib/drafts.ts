@@ -2,23 +2,27 @@ import 'server-only';
 import { validateProduction, type ValidationError } from '@bindle/core';
 import { HttpError } from '@/lib/auth';
 import { auditLog, getOrg, getProduction } from '@/lib/db';
+import { INSTANCE_POLICY } from '@/lib/policy';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { PersonRow, ProductionDraftInput } from '@/lib/types';
 
 export function validateDraftInput(input: ProductionDraftInput): ValidationError[] {
-  return validateProduction({
-    title: input.title,
-    pool_definition: input.pool_definition,
-    commons_recipient: input.commons_recipient,
-    commons_bps: input.commons_bps,
-    contributors: input.contributors.map((c) => ({
-      name: c.full_name,
-      email: c.email,
-      role: c.role,
-      bps: c.share_bps,
-      principal: c.is_principal,
-    })),
-  });
+  return validateProduction(
+    {
+      title: input.title,
+      pool_definition: input.pool_definition,
+      commons_recipient: input.commons_recipient,
+      commons_bps: input.commons_bps,
+      contributors: input.contributors.map((c) => ({
+        name: c.full_name,
+        email: c.email,
+        role: c.role,
+        bps: c.share_bps,
+        principal: c.is_principal,
+      })),
+    },
+    INSTANCE_POLICY,
+  );
 }
 
 function parseDraftInput(body: unknown): ProductionDraftInput {

@@ -74,6 +74,8 @@ create table signatures (
   content_hash text not null,         -- full hex SHA-256 of canonical terms at signing time
   consent_text_version text not null,
   typed_name text not null,           -- signer types their full name (ESIGN/UETA intent)
+  signer_email text not null,         -- email of the AUTHENTICATED session that signed,
+                                      -- recorded server-side; never taken from the request body
   signed_at timestamptz not null default now(),
   ip inet,
   user_agent text
@@ -85,6 +87,8 @@ create table registrations (
   canonical_json jsonb not null,      -- exact hashed payload, stored verbatim
   content_hash text not null,         -- full SHA-256 hex
   buid text not null unique,          -- e.g. BNDL::PROD::<NS>::ROOT::R0::a1b2c3d4
+  policy text not null,               -- split-shape policy id the terms were validated under;
+                                      -- also inside canonical_json, so it is hash-covered
   glyph_svg text not null,
   registered_at timestamptz not null default now()
 );
@@ -260,6 +264,7 @@ create or replace function register_production(
   p_canonical_json jsonb,
   p_content_hash text,
   p_buid text,
+  p_policy text,
   p_glyph_svg text,
   p_actor text
 ) returns uuid
@@ -299,8 +304,13 @@ begin
 
   -- A short-hash collision trips the buid unique constraint here; the caller
   -- retries with an extended short hash. Full hash remains the truth.
-  insert into registrations (production_id, canonical_json, content_hash, buid, glyph_svg)
-  values (p_production_id, p_canonical_json, p_content_hash, p_buid, p_glyph_svg)
+  if p_canonical_json ->> 'policy' is distinct from p_policy then
+    raise exception 'policy mismatch: registration says %, canonical payload says %',
+      p_policy, p_canonical_json ->> 'policy';
+  end if;
+
+  insert into registrations (production_id, canonical_json, content_hash, buid, policy, glyph_svg)
+  values (p_production_id, p_canonical_json, p_content_hash, p_buid, p_policy, p_glyph_svg)
   returning id into v_registration_id;
 
   perform set_config('bindle.registering', p_production_id::text, true);
@@ -316,7 +326,7 @@ begin
   insert into audit_log (org_id, actor, action, subject_type, subject_id, detail)
   values (
     v_prod.org_id, p_actor, 'production.registered', 'production', p_production_id,
-    jsonb_build_object('buid', p_buid, 'content_hash', p_content_hash, 'registration_id', v_registration_id)
+    jsonb_build_object('buid', p_buid, 'content_hash', p_content_hash, 'policy', p_policy, 'registration_id', v_registration_id)
   );
 
   return v_registration_id;
@@ -324,7 +334,7 @@ end $$;
 
 -- Mutations run server-side with the service role; end users never call these.
 revoke execute on function void_signing_round(uuid, text, text) from public, anon, authenticated;
-revoke execute on function register_production(uuid, jsonb, text, text, text, text) from public, anon, authenticated;
+revoke execute on function register_production(uuid, jsonb, text, text, text, text, text) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- RLS

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { StatusBadge } from '@/components/StatusBadge';
 import { getSessionUser } from '@/lib/auth';
+import { buidShareable } from '@/lib/guards';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { ProductionRow, RegistrationRow } from '@/lib/types';
 
@@ -63,11 +64,14 @@ export default async function HomePage() {
               <li key={p.id} className="flex flex-wrap items-baseline justify-between gap-2 py-3">
                 <span className="font-display">{p.title}</span>
                 <span className="flex items-center gap-3">
-                  {reg && (
-                    <Link href={`/p/${encodeURIComponent(reg.buid)}`} className="font-mono text-xs text-prompt underline">
-                      {reg.buid}
-                    </Link>
-                  )}
+                  {reg &&
+                    (buidShareable() ? (
+                      <Link href={`/p/${encodeURIComponent(reg.buid)}`} className="font-mono text-xs text-prompt underline">
+                        {reg.buid}
+                      </Link>
+                    ) : (
+                      <span className="font-mono text-[11px] text-ink-soft">identifier pending namespace</span>
+                    ))}
                   <StatusBadge status={p.status} />
                 </span>
               </li>

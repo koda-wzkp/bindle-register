@@ -2,8 +2,10 @@ import 'server-only';
 import { BindleConfig, glyph, mintBuid, validateRegistrationReadiness } from '@bindle/core';
 import { canonicalTerms } from '@/lib/canonical';
 import { getProductionDetail } from '@/lib/db';
-import { sendRegistrationEmail } from '@/lib/email';
+import { sendRegistrationEmail, sendRegistrationEmailNamespacePending } from '@/lib/email';
 import { appUrl } from '@/lib/env';
+import { buidShareable } from '@/lib/guards';
+import { INSTANCE_POLICY } from '@/lib/policy';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { ProductionDetail } from '@/lib/types';
 
@@ -57,6 +59,7 @@ export async function maybeRegister(productionId: string): Promise<{ registered:
       p_canonical_json: terms.payload,
       p_content_hash: terms.contentHash,
       p_buid: buid,
+      p_policy: INSTANCE_POLICY.id,
       p_glyph_svg: glyphSvg,
       p_actor: 'system',
     });
@@ -70,7 +73,7 @@ export async function maybeRegister(productionId: string): Promise<{ registered:
   }
   if (!registered) throw new Error('could not mint a unique BUID');
 
-  await sendRegistrationEmails(detail, buid, terms.json, glyphSvg);
+  await sendRegistrationEmails(detail, buid, terms.json, glyphSvg, terms.contentHash);
   return { registered: true, buid };
 }
 
@@ -79,6 +82,7 @@ async function sendRegistrationEmails(
   buid: string,
   canonicalJson: string,
   glyphSvg: string,
+  contentHash: string,
 ): Promise<void> {
   const recordUrl = `${appUrl()}/p/${encodeURIComponent(buid)}`;
   const recipients = detail.contributions.map((c) => ({
@@ -94,15 +98,28 @@ async function sendRegistrationEmails(
   const failures: string[] = [];
   for (const r of recipients) {
     try {
-      await sendRegistrationEmail({
-        to: r.email,
-        name: r.name,
-        title: detail.production.title,
-        buid,
-        recordUrl,
-        canonicalJson,
-        glyphSvg,
-      });
+      if (buidShareable()) {
+        await sendRegistrationEmail({
+          to: r.email,
+          name: r.name,
+          title: detail.production.title,
+          buid,
+          recordUrl,
+          canonicalJson,
+          glyphSvg,
+        });
+      } else {
+        // DECIDE-01: the namespace is unresolved, so the BUID stays inside.
+        // Signers still get their verification copy — the canonical JSON and
+        // content hash are namespace-independent facts about what they signed.
+        await sendRegistrationEmailNamespacePending({
+          to: r.email,
+          name: r.name,
+          title: detail.production.title,
+          contentHash,
+          canonicalJson,
+        });
+      }
     } catch (e) {
       failures.push(`${r.email}: ${(e as Error).message}`);
     }

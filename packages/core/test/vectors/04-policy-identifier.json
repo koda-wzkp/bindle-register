@@ -1,5 +1,5 @@
 {
-  "description": "Root collaborative production, 8 contributors, ASCII names",
+  "description": "Same terms as vector 01 under a different split-shape policy id — the policy is part of the hashed record",
   "payload": {
     "protocol": "BNDL",
     "medium": "PROD",
@@ -8,7 +8,7 @@
     "title": "Floyd Collins",
     "parent_buid": null,
     "revision": 0,
-    "policy": "bindle-commons-v1",
+    "policy": "example-alt-policy-v1",
     "pool_definition": "Earned-revenue surplus from the Floyd Collins run: box office and program-ad receipts, less licensed royalties, venue rental, and the capped production expense list agreed by the company (materials, costume, print).",
     "commons": {
       "recipient": "Puddletown Commons Fund",
@@ -66,7 +66,7 @@
     ]
   },
   "expected": {
-    "content_hash": "2b36b15c7e868cc73a44cb9fcf7878fe8631766ed94030416afbed0baf7064e5",
-    "buid": "BNDL::PROD::TBD::ROOT::R0::2b36b15c"
+    "content_hash": "8314b8036d12fdad22b7ce73ff240c890372895f22dc67c578af2305395abcb3",
+    "buid": "BNDL::PROD::TBD::ROOT::R0::8314b803"
   }
 }

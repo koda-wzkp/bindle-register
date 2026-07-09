@@ -44,6 +44,7 @@ export interface SignatureRow {
   content_hash: string;
   consent_text_version: string;
   typed_name: string;
+  signer_email: string;
   signed_at: string;
   ip: string | null;
   user_agent: string | null;
@@ -55,6 +56,7 @@ export interface RegistrationRow {
   canonical_json: unknown;
   content_hash: string;
   buid: string;
+  policy: string;
   glyph_svg: string;
   registered_at: string;
 }

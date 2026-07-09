@@ -5,6 +5,7 @@ import { Glyph } from '@/components/Glyph';
 import { SplitTable } from '@/components/SplitTable';
 import { getSessionUser } from '@/lib/auth';
 import { getProductionDetail, getRegistrationByBuid } from '@/lib/db';
+import { buidShareable } from '@/lib/guards';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { ProductionRow, RegistrationRow } from '@/lib/types';
 
@@ -85,6 +86,21 @@ export default async function RecordPage({ params }: { params: { buid: string } 
         <h1 className="font-display text-2xl">This record is private</h1>
         <p className="text-sm text-ink-soft">
           Registered records are visible to their signers and production admins.
+        </p>
+      </div>
+    );
+  }
+
+  // DECIDE-01: while the namespace segment is TBD, the identifier is not
+  // shared beyond internal admin views — even with signers.
+  if (!user.isAdmin && !buidShareable()) {
+    return (
+      <div className="max-w-xl space-y-3">
+        <h1 className="font-display text-2xl">Registered — identifier pending</h1>
+        <p className="text-sm text-ink-soft">
+          This production is registered and its terms are frozen. The permanent public
+          identifier will be shared once the registry namespace is finalized. Your emailed
+          canonical JSON and content hash already prove exactly what was signed.
         </p>
       </div>
     );

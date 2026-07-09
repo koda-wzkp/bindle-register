@@ -19,6 +19,10 @@
       "types": "./dist/validate.d.ts",
       "default": "./dist/validate.js"
     },
+    "./policy": {
+      "types": "./dist/policy.d.ts",
+      "default": "./dist/policy.js"
+    },
     "./glyph": {
       "types": "./dist/glyph.d.ts",
       "default": "./dist/glyph.js"

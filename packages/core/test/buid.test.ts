@@ -53,6 +53,24 @@ describe('parseBuid', () => {
     });
   });
 
+  it('round-trips a collision-extended BUID', () => {
+    const extended = mintBuid({
+      contentHash: HASH_B,
+      revision: 2,
+      parentContentHash: HASH_A,
+      shortChars: 12,
+    });
+    expect(extended).toBe('BNDL::PROD::TBD::a1b2c3d4::R2::ffee00119999');
+    expect(parseBuid(extended)).toEqual({
+      protocol: 'BNDL',
+      medium: 'PROD',
+      namespace: 'TBD',
+      lineage: 'a1b2c3d4',
+      revision: 2,
+      short: 'ffee00119999',
+    });
+  });
+
   it('rejects malformed BUIDs', () => {
     expect(() => parseBuid('BNDL::PROD::TBD::ROOT::R0')).toThrow();
     expect(() => parseBuid('BNDL::PROD::TBD::ROOT::zero::a1b2c3d4')).toThrow();

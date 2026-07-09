@@ -6,6 +6,7 @@
  * open-for-signing route re-runs the same validation server-side.
  */
 import { BindleConfig } from '@bindle/core/config';
+import { BINDLE_COMMONS_POLICY } from '@bindle/core/policy';
 import { validateProduction } from '@bindle/core/validate';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -56,7 +57,10 @@ export function ProductionBuilder({ initial }: { initial?: BuilderInitial }) {
   const [title, setTitle] = useState(initial?.title ?? '');
   const [poolDefinition, setPoolDefinition] = useState(initial?.pool_definition ?? '');
   const [commonsRecipient, setCommonsRecipient] = useState(initial?.commons_recipient ?? '');
-  const [commonsBps, setCommonsBps] = useState(String(initial?.commons_bps ?? BindleConfig.COMMONS_FLOOR_BPS));
+  // Mirrors the server's INSTANCE_POLICY (both are the Bindle commons
+  // preset); the open-for-signing route re-validates with the real thing.
+  const policy = BINDLE_COMMONS_POLICY;
+  const [commonsBps, setCommonsBps] = useState(String(initial?.commons_bps ?? policy.commonsFloorBps));
   const [runOpens, setRunOpens] = useState(initial?.run_opens ?? '');
   const [runCloses, setRunCloses] = useState(initial?.run_closes ?? '');
   const [contributors, setContributors] = useState<ContributorDraft[]>(
@@ -69,20 +73,23 @@ export function ProductionBuilder({ initial }: { initial?: BuilderInitial }) {
 
   const errors = useMemo(
     () =>
-      validateProduction({
-        title,
-        pool_definition: poolDefinition,
-        commons_recipient: commonsRecipient,
-        commons_bps: parseBps(commonsBps),
-        contributors: contributors.map((c) => ({
-          name: c.full_name,
-          email: c.email,
-          role: c.role,
-          bps: parseBps(c.share_bps),
-          principal: c.is_principal,
-        })),
-      }),
-    [title, poolDefinition, commonsRecipient, commonsBps, contributors],
+      validateProduction(
+        {
+          title,
+          pool_definition: poolDefinition,
+          commons_recipient: commonsRecipient,
+          commons_bps: parseBps(commonsBps),
+          contributors: contributors.map((c) => ({
+            name: c.full_name,
+            email: c.email,
+            role: c.role,
+            bps: parseBps(c.share_bps),
+            principal: c.is_principal,
+          })),
+        },
+        policy,
+      ),
+    [title, poolDefinition, commonsRecipient, commonsBps, contributors, policy],
   );
 
   const contributorSum = contributors.reduce((sum, c) => {
@@ -198,8 +205,8 @@ export function ProductionBuilder({ initial }: { initial?: BuilderInitial }) {
             </div>
             <div>
               <label className="field-label" htmlFor="commons_bps">Commons share (bps)</label>
-              <input id="commons_bps" type="number" min={BindleConfig.COMMONS_FLOOR_BPS} step={1} className="field" value={commonsBps} onChange={(e) => setCommonsBps(e.target.value)} />
-              <p className="mt-1 text-xs text-ink-soft">{pct(parseBps(commonsBps))} · floor {BindleConfig.COMMONS_FLOOR_BPS} bps</p>
+              <input id="commons_bps" type="number" min={policy.commonsFloorBps} step={1} className="field" value={commonsBps} onChange={(e) => setCommonsBps(e.target.value)} />
+              <p className="mt-1 text-xs text-ink-soft">{pct(parseBps(commonsBps))} · floor {policy.commonsFloorBps} bps ({policy.id})</p>
             </div>
           </div>
         </section>

@@ -1,5 +1,7 @@
 export { BindleConfig } from './config.js';
 export type { BindleConfigType } from './config.js';
+export { BINDLE_COMMONS_POLICY } from './policy.js';
+export type { BindlePolicy } from './policy.js';
 export type { CanonicalProduction, CanonicalContributor, ValidationError } from './types.js';
 export { buildCanonicalProduction, canonicalJson, compareCodePoints } from './canonical.js';
 export type { CanonicalInput } from './canonical.js';

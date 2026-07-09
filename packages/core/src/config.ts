@@ -1,12 +1,13 @@
 /**
- * Bindle protocol constants. Validation and PUID minting read only from this
- * module so deployment-specific tuning never forks logic.
+ * Bindle protocol constants — invariants every implementation shares.
+ * Validation and BUID minting read only from this module.
+ *
+ * Split-shape rules (commons floor, principal caps) are deliberately NOT
+ * here: they are per-instance policy, chosen at registration and recorded
+ * with the record. See policy.ts.
  */
 export const BindleConfig = {
   TOTAL_BPS: 10_000, // splits are integer basis points; floats forbidden
-  COMMONS_FLOOR_BPS: 500, // ≥5% commons, per Bindle locked economics
-  PRINCIPAL_CAP_BPS: 4_900, // ≤49% per principal contributor on collaborative works
-  SOLO_MAX_BPS: 8_500, // 85% max on solo works (theatre: effectively unused, keep for parity)
   PROTOCOL_SEGMENT: 'BNDL',
   MEDIUM_SEGMENT: 'PROD', // DECIDE-02
   NAMESPACE_SEGMENT: 'TBD', // DECIDE-01 — do not ship a watershed code until resolved

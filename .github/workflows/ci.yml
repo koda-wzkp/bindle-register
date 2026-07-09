@@ -47,6 +47,9 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/01-immutability.sql
 
+      - name: Route-handler integration tests (authorization matrix, collision retry, guards)
+        run: npm run test:routes
+
       - name: Typecheck app
         run: npx tsc --noEmit
       - name: Build app

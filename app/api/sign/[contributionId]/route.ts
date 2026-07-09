@@ -5,6 +5,7 @@ import { canonicalTerms } from '@/lib/canonical';
 import { CONSENT_TEXT_VERSION } from '@/lib/consent';
 import { auditLog, getProductionDetail } from '@/lib/db';
 import { sendSignatureConfirmation } from '@/lib/email';
+import { buidShareable, signatureCollectionBlocked } from '@/lib/guards';
 import { maybeRegister } from '@/lib/registration';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
@@ -24,6 +25,10 @@ export async function POST(request: Request, { params }: { params: { contributio
 
     if (!typedName) return jsonError(400, 'Type your full legal name to sign.');
     if (!consented) return jsonError(400, 'Check the consent box to sign.');
+
+    // DECIDE-04: no real signatures until the consent copy has legal review.
+    const gate = signatureCollectionBlocked();
+    if (gate.blocked) return jsonError(503, gate.reason!);
 
     const db = supabaseAdmin();
     const contributionLookup = await db
@@ -59,6 +64,9 @@ export async function POST(request: Request, { params }: { params: { contributio
       content_hash: terms.contentHash,
       consent_text_version: CONSENT_TEXT_VERSION,
       typed_name: typedName,
+      // Attribution comes from the verified session, never from the request
+      // body or the link.
+      signer_email: user.email,
       ip,
       user_agent: userAgent,
     });
@@ -90,6 +98,11 @@ export async function POST(request: Request, { params }: { params: { contributio
     }
 
     const result = await maybeRegister(detail.production.id);
+    // DECIDE-01: the BUID stays off signer-facing surfaces (including this
+    // response) until the namespace is resolved. Admins may see it.
+    if (result.buid && !buidShareable() && !user.isAdmin) {
+      return NextResponse.json({ ok: true, registered: result.registered });
+    }
     return NextResponse.json({ ok: true, ...result });
   });
 }

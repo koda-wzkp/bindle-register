@@ -43,6 +43,17 @@ superseded only after the child registers.
 Per the Bindle licensing model: node software AGPL, SDK primitives Apache so
 other implementations can adopt them freely.
 
+## Protocol vs. policy
+
+What makes a record verifiable — integer bps summing to 10,000,
+canonicalization, hashing, BUID grammar, append-only semantics — is protocol
+and lives in `BindleConfig`. How a community shapes its splits — commons
+floor, principal caps — is **per-instance policy** (`BindlePolicy`), chosen
+explicitly at validation time. Puddletown registers under the
+`bindle-commons-v1` preset. The policy id is hashed into every canonical
+payload and stored on the registration row, so each record is verifiable
+against the rules it was actually registered under. See `docs/SPEC.md` §4/§8.
+
 ## Immutability is enforced, not aspirational
 
 - `registrations` and `audit_log`: guard triggers reject UPDATE/DELETE for
@@ -85,7 +96,10 @@ migration applied to the production Supabase project.
 ## Tests
 
 ```sh
-npm test                      # @bindle/core: vectors, validation, glyph purity, verify
+npm run test:core             # @bindle/core: vectors, validation, glyph purity, verify
+npm run test:routes           # route handlers against the real migration on Postgres:
+                              # authorization matrix, forced BUID collision retry,
+                              # namespace + consent guards (needs PG* env vars)
 supabase/tests/README.md      # database immutability suite (psql)
 npx tsc --noEmit && npx next build
 ```
@@ -94,10 +108,14 @@ The committed test vectors in `packages/core/test/vectors/` lock the
 canonicalization → hash → BUID pipeline, including NFC normalization of
 non-ASCII names. If they fail, the change is a protocol break.
 
-## Open decisions (spec §14)
+## Open decisions (spec §14) — enforced in code
 
-`NAMESPACE_SEGMENT` ships as the placeholder `TBD` pending DECIDE-01 — do not
-share BUIDs externally until it's resolved. `PROD` as the medium segment is
-DECIDE-02. Consent copy (`lib/consent.ts`) goes to legal review before UAT
-(DECIDE-04); bump `CONSENT_TEXT_VERSION` in `packages/core/src/config.ts`
-whenever it changes.
+- **DECIDE-01**: `NAMESPACE_SEGMENT` ships as the placeholder `TBD`. A
+  runtime guard (`lib/guards.ts`) keeps BUIDs out of every email and off
+  every non-admin surface until it's resolved — signers still get their
+  canonical JSON and content hash, which verify independently.
+- **DECIDE-04**: the consent copy (`lib/consent.ts`) has not had legal
+  review. Production deployments refuse to record signatures until
+  `CONSENT_TEXT_REVIEWED=true` is set; preview/UAT can sign dummy data.
+- `PROD` as the medium segment is DECIDE-02. Bump `CONSENT_TEXT_VERSION` in
+  `packages/core/src/config.ts` whenever a word of the consent text changes.

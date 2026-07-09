@@ -6,8 +6,9 @@
     "namespace": "TBD",
     "org": "Puddletown Theatre Collective",
     "title": "Floyd Collins",
-    "parent_buid": "BNDL::PROD::TBD::ROOT::R0::bf4ce5b8",
+    "parent_buid": "BNDL::PROD::TBD::ROOT::R0::2b36b15c",
     "revision": 1,
+    "policy": "bindle-commons-v1",
     "pool_definition": "Earned-revenue surplus from the Floyd Collins run: box office and program-ad receipts, less licensed royalties, venue rental, and the capped production expense list agreed by the company (materials, costume, print).",
     "commons": {
       "recipient": "Puddletown Commons Fund",
@@ -65,7 +66,7 @@
     ]
   },
   "expected": {
-    "content_hash": "796772511b08894450fe1bffa95720edb964c4a79f39ac7fd3922628abdad14f",
-    "buid": "BNDL::PROD::TBD::bf4ce5b8::R1::79677251"
+    "content_hash": "9492d5b3884ef5a3b20eb880565df3012d910541abe6a85afee6a062bb9a1579",
+    "buid": "BNDL::PROD::TBD::2b36b15c::R1::9492d5b3"
   }
 }

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { handle, jsonError } from '@/lib/api';
 import { requireUser } from '@/lib/auth';
 import { getProductionDetail, getRegistrationByBuid } from '@/lib/db';
+import { buidShareable } from '@/lib/guards';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +30,14 @@ export async function GET(_request: Request, { params }: { params: { buid: strin
     // jsonb storage does not preserve byte order; re-canonicalize (JCS is
     // deterministic, so this reproduces the exact hashed bytes).
     const payload = registration.canonical_json as CanonicalProduction;
+    // DECIDE-01: while the namespace is TBD the BUID stays off signer
+    // downloads; the canonical JSON + content hash remain fully verifiable.
+    const includeBuid = buidShareable() || user.isAdmin;
     const body = JSON.stringify(
       {
-        buid: registration.buid,
+        ...(includeBuid ? { buid: registration.buid } : {}),
         content_hash: registration.content_hash,
+        policy: registration.policy,
         canonical_json: JSON.parse(canonicalJson(payload)),
       },
       null,
